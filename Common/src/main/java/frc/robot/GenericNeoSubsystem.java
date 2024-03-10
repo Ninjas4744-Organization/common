@@ -12,13 +12,22 @@ import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.SoftLimitDirection;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import edu.wpi.first.wpilibj.Timer;
+
 public abstract class GenericNeoSubsystem extends NinjaMotorController {
 
   protected final CANSparkMax _master;
+  protected final CANSparkMax[] _slaves;
+
   protected final RelativeEncoder _relEncoder;
   protected final AbsoluteEncoder _absEncoder;
   protected final SparkPIDController _controller;
-  protected final CANSparkMax[] _slaves;
+
+  private final TrapezoidProfile _profile;
+  private final Timer trapozoidTimer = new Timer();
 
   /** Creates a new GenericMotorSubsystem. */
   protected GenericNeoSubsystem(final NinjaMotorSubsystemConstants constants) {
@@ -31,40 +40,43 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
     _relEncoder = _master.getEncoder();
     _absEncoder = _master.getAbsoluteEncoder();
 
-    _master.setSoftLimit(SoftLimitDirection.kForward, _constants.kMaxUnitsLimit);
-    _master.enableSoftLimit(SoftLimitDirection.kForward, true);
-
-    _master.setSoftLimit(SoftLimitDirection.kReverse, _constants.kMinUnitsLimit);
-    _master.enableSoftLimit(SoftLimitDirection.kReverse, true);
-
+    _profile = new TrapezoidProfile(new Constraints(_constants.kCruiseVelocity, _constants.kAcceleration));
     _controller = _master.getPIDController();
 
-    
     _master.burnFlash();
-
 
     for (int i = 0; i < _slaves.length; ++i) {
       _slaves[i] = SparkMAXFactory.createPermanentSlaveSparkMax(_constants.kSlaveConstants[i].id, _master,
           _constants.kSlaveConstants[i].invert);
       _slaves[i].burnFlash();
     }
-    
+
     // Send a neutral command.
-    stopMotor();
+    stop();
   }
 
   @Override
   public synchronized void writePeriodicOutputs() {
     if (_controlState == ControlState.MOTION_MAGIC) {
-      // no motion magic for SParkmax
+      _profile.calculate(trapozoidTimer.get(), new State(getPosition(), 0), new State(demand, 0));
     } else if (_controlState == ControlState.POSITION_PID || _controlState == ControlState.MOTION_PROFILING) {
       _controller.setReference(demand, ControlType.kPosition);
     } else {
       _master.set(demand);
     }
-    
+
+  }
+  @Override
+  public void setForwardSoftLimit(float sofLimit) {
+    _master.setSoftLimit(SoftLimitDirection.kForward, sofLimit);
+    _master.enableSoftLimit(SoftLimitDirection.kForward, true);
   }
 
+  @Override
+  public void setReverseSoftLimit(float sofLimit) {
+    _master.setSoftLimit(SoftLimitDirection.kReverse, sofLimit);
+    _master.enableSoftLimit(SoftLimitDirection.kReverse, true);
+  }
   public boolean atHomingLocation() {
     return false;
   }
@@ -73,7 +85,8 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
     return _controlState.toString();
   }
 
-  public void stopMotor() {
+  @Override
+  public void stop() {
     set(0.0);
     _master.stopMotor();
   }
@@ -83,11 +96,19 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
   }
 
   @Override
-  public synchronized void set(double percentage) {
+  public void set(double percentage) {
     if (_controlState != ControlState.OPEN_LOOP) {
       _controlState = ControlState.OPEN_LOOP;
     }
     demand = percentage;
+  }
+
+  public void set(State pos) {
+    if (_controlState != ControlState.MOTION_MAGIC) {
+      _controlState = ControlState.MOTION_MAGIC;
+    }
+    trapozoidTimer.restart();
+    demand = pos.position;
   }
 
   public synchronized double getVelError() {
@@ -101,7 +122,7 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
   }
 
   @Override
-  public synchronized double get() {
+  public synchronized double getPosition() {
     return _relEncoder.getPosition();
   }
 
@@ -126,6 +147,11 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
   }
 
   @Override
+  public double get() {
+    return _master.get();
+  }
+
+  @Override
   public void setPIDconstants(double Kp, double Ki, double Kd, double KIzone) {
     _controller.setP(Kp, 0);
     _controller.setI(Ki, 0);
@@ -140,5 +166,7 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
     }
     demand = pos;
   }
+
+  
 
 }

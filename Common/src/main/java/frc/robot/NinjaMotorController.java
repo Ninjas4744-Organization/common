@@ -52,6 +52,9 @@ public abstract class NinjaMotorController extends SubsystemBase  {
         .getEntry();
 
       setPIDconstants(_constants.kPositionKp, _constants.kPositionKi, _constants.kPositionKd, _constants.kPositionKIzone);
+      setForwardSoftLimit(_constants.kMaxUnitsLimit);
+      
+      setReverseSoftLimit(_constants.kMinUnitsLimit);
   }
 
   /** Creates a new NinjasSubsytem. */
@@ -70,15 +73,19 @@ public abstract class NinjaMotorController extends SubsystemBase  {
 
   public void zeroSensors() {
   }
+  public abstract void setForwardSoftLimit(float sofLimit);
+  public abstract void setReverseSoftLimit(float sofLimit);
 
   public abstract void setPIDconstants(double Kp, double Ki, double Kd, double KIzone);
   public abstract double getP();
   public abstract double getI();
   public abstract double getD();
   public abstract double getIzone();
-  public abstract double get();
+  public abstract double getPosition();
 
   public abstract void set(double percentage);
+  public abstract double get();
+  protected abstract void stop();
   
   public abstract void setPosition(double pos);
 
@@ -87,17 +94,19 @@ public abstract class NinjaMotorController extends SubsystemBase  {
   public abstract double getSetpoint();
 
 
-  public void outputTelemetry() {
-    position.setDouble(get());
+  public void outputTelemetry(boolean testing) {
+    if(testing){
+    position.setDouble(getPosition());
     currentControl.setString(_controlState.toString());
     setpoint.setDouble(getSetpoint());
     velError.setDouble(getVelError());
+    }
   }
 
   @Override
   public void periodic() {
     writePeriodicOutputs();
-    outputTelemetry();
+    outputTelemetry(false);
   }
 
 
