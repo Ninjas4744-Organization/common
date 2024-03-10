@@ -8,7 +8,8 @@ public class SparkMAXFactory {
 
     // create a CANTalon with the default (out of the box) configuration
     public static CANSparkMax createDefaultSparkMax(int id) {
-        return new CANSparkMax(id, MotorType.kBrushless);
+        final CANSparkMax spark = createSpark(id);
+        return spark;
     }
 
    
@@ -23,6 +24,8 @@ public class SparkMAXFactory {
 
     private static CANSparkMax createSpark(int id) {
         CANSparkMax spark = new CANSparkMax(id,MotorType.kBrushless);
+        spark.restoreFactoryDefaults();
+
         spark.clearFaults();
 
         return spark;
