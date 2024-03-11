@@ -5,16 +5,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class CommandsBuilder {
-    public Command runIntake(NinjaMotorController angle, NinjaMotorController rollers){
+    public Command runIntake(NinjaSubsytem angle, NinjaSubsytem rollers){
         return Commands.run(() -> {
-            angle.set(new State());
-            rollers.set(0);
+            angle._master.set(new State());
+            rollers._master.set(0);
         }, angle,rollers);
     }
 
-    public Command elevatorUp(NinjaMotorController elevator){
+    public Command elevatorUp(NinjaSubsytem elevator){
         return Commands.run(() -> {
-            elevator.set(new State());
+            elevator._master.set(new State());
             
         }, elevator);
     }

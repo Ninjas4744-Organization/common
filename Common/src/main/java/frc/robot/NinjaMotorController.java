@@ -9,11 +9,8 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public abstract class NinjaMotorController extends SubsystemBase {
+public abstract class NinjaMotorController {
   protected ControlState _controlState;
   protected GenericEntry position, velocity, setpoint, posError, velError, currentControl;
   protected NinjaMotorSubsystemConstants _constants;
@@ -106,16 +103,8 @@ public abstract class NinjaMotorController extends SubsystemBase {
 
   public abstract double getSetpoint();
 
-  public Command runProfile(State pos) {
-    return Commands.runOnce(() -> set(pos), this);
-  }
+  
 
-  public Command runMotors(double percentage) {
-    return Commands.startEnd(
-        () -> set(percentage),
-        () -> stop(),
-        this);
-  }
 
   public void outputTelemetry(boolean testing) {
     if (testing) {
@@ -126,11 +115,8 @@ public abstract class NinjaMotorController extends SubsystemBase {
     }
   }
 
-  @Override
-  public void periodic() {
-    writePeriodicOutputs();
-    outputTelemetry(false);
-  }
+  
+  
 
   protected enum ControlState {
     OPEN_LOOP, MOTION_MAGIC, POSITION_PID, MOTION_PROFILING

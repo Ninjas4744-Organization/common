@@ -8,13 +8,12 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /** Add your docs here. */
-public class LinearSubSystem extends GenericSparkMaxSubsystem {
+public class LinearSubSystem extends NinjaSubsytem {
     private DigitalInput _limitSwitch;
 
-    public LinearSubSystem(NinjaMotorSubsystemConstants constants) {
-        super(constants);
+    public LinearSubSystem(NinjaMotorController master) {
+        super(master);
         _limitSwitch = new DigitalInput(0);
-
     }
 
     public boolean isLimitSwitch() {
@@ -23,11 +22,13 @@ public class LinearSubSystem extends GenericSparkMaxSubsystem {
 
     @Override
     public void periodic() {
+        
+        
         if (isLimitSwitch())
-            zeroSensors();
+            _master.zeroSensors();
 
-        if (isLimitSwitch() && get() < 0)
-            stop();
+        if (isLimitSwitch() && _master.get() < 0)
+            _master.stop();
 
     }
 
@@ -37,11 +38,6 @@ public class LinearSubSystem extends GenericSparkMaxSubsystem {
         });
     }
 
-    @Override
-    public void outputTelemetry(boolean testing) {
-
-        // enter new loggers
-        super.outputTelemetry(testing);
-    }
+    
 
 }
