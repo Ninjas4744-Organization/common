@@ -66,6 +66,7 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
     }
 
   }
+
   @Override
   public void setForwardSoftLimit(float sofLimit) {
     _master.setSoftLimit(SoftLimitDirection.kForward, sofLimit);
@@ -77,6 +78,7 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
     _master.setSoftLimit(SoftLimitDirection.kReverse, sofLimit);
     _master.enableSoftLimit(SoftLimitDirection.kReverse, true);
   }
+
   public boolean atHomingLocation() {
     return false;
   }
@@ -102,6 +104,7 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
     }
     demand = percentage;
   }
+
   @Override
   public void set(State pos) {
     if (_controlState != ControlState.MOTION_MAGIC) {
@@ -166,7 +169,5 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
     }
     demand = pos;
   }
-
-  
 
 }
