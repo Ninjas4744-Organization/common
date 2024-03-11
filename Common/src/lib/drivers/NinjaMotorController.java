@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package frc.lib.drivers;
 
 import com.revrobotics.CANSparkBase.IdleMode;
 
@@ -50,7 +50,7 @@ public abstract class NinjaMotorController {
         .withSize(3, 3)
         .getEntry();
 
-    setPIDconstants(_constants.kPositionKp, _constants.kPositionKi, _constants.kPositionKd, _constants.kPositionKIzone);
+    setPIDconstants(_constants.Kp, _constants.Ki, _constants.Kd, _constants.KIzone);
     setForwardSoftLimit(_constants.kMaxUnitsLimit);
 
     setReverseSoftLimit(_constants.kMinUnitsLimit);
@@ -73,9 +73,9 @@ public abstract class NinjaMotorController {
   public void zeroSensors() {
   }
 
-  public abstract void setForwardSoftLimit(float sofLimit);
+  public abstract void setForwardSoftLimit(double sofLimit);
 
-  public abstract void setReverseSoftLimit(float sofLimit);
+  public abstract void setReverseSoftLimit(double sofLimit);
 
   public abstract void setPIDconstants(double Kp, double Ki, double Kd, double KIzone);
 
@@ -95,14 +95,15 @@ public abstract class NinjaMotorController {
 
   public abstract double get();
 
-  protected abstract void stop();
+  public abstract void stop();
 
   public abstract void setPosition(double pos);
+  public abstract void setHomingPosition(double pos);
 
   public abstract double getVelError();
 
   public abstract double getSetpoint();
-
+  public abstract boolean atHomingLocation();
   
 
 
@@ -140,16 +141,16 @@ public abstract class NinjaMotorController {
     public MotorControllerConstants kMasterConstants = new MotorControllerConstants();
     public MotorControllerConstants[] kSlaveConstants = new MotorControllerConstants[0];
 
-    public IdleMode kNeutralMode = IdleMode.kBrake;
+    public IdleMode kSparkMaxMode = IdleMode.kBrake;
     public double kHomePosition = 0.0; // Units
     public double kRotationsPerUnitDistance = 1.0;
     public double kSoftLimitDeadband = 0.0;
 
-    public double kPositionKp = 0;
-    public double kPositionKi = 0;
-    public double kPositionKIzone = 0;
-    public double kPositionKd = 0;
-    public double kPositionKf = 0;
+    public double Kp = 0;
+    public double Ki = 0;
+    public double KIzone = 0;
+    public double Kd = 0;
+    public double Kf = 0;
     public int kPositionDeadband = 0; // Ticks
 
     public double kVelocityFeedforward = 0;
@@ -159,6 +160,7 @@ public abstract class NinjaMotorController {
     public double kJerk = 0; // Units/s^3
     public double kRampRate = 0.0; // s
     public double kMaxVoltage = 12.0;
+    public double kGearRatio = 0;
 
     public int kSupplyCurrentLimit = 60; // amps
     public boolean kEnableSupplyCurrentLimit = false;
@@ -166,8 +168,8 @@ public abstract class NinjaMotorController {
     public int kStatorCurrentLimit = 40; // amps
     public boolean kEnableStatorCurrentLimit = false;
 
-    public float kMaxUnitsLimit = Float.POSITIVE_INFINITY;
-    public float kMinUnitsLimit = Float.NEGATIVE_INFINITY;
+    public double kMaxUnitsLimit = Double.POSITIVE_INFINITY;
+    public double kMinUnitsLimit = Double.NEGATIVE_INFINITY;
 
     public int kStatusFrame8UpdateRate = 1000;
   }

@@ -2,9 +2,8 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package frc.lib.drivers;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -17,20 +16,20 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.wpilibj.Timer;
 
-public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
+public class GenericSparkMaxSubsystem extends NinjaMotorController {
 
   protected final CANSparkMax _master;
   protected final CANSparkMax[] _slaves;
 
   protected final RelativeEncoder _relEncoder;
-  protected final AbsoluteEncoder _absEncoder;
+  // protected final AbsoluteEncoder _absEncoder;
   protected final SparkPIDController _controller;
 
   private final TrapezoidProfile _profile;
   private final Timer trapozoidTimer = new Timer();
-
+  
   /** Creates a new GenericMotorSubsystem. */
-  protected GenericSparkMaxSubsystem(final NinjaMotorSubsystemConstants constants) {
+  public GenericSparkMaxSubsystem(final NinjaMotorSubsystemConstants constants) {
     super(constants);
 
     _constants = constants;
@@ -38,11 +37,12 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
     _slaves = new CANSparkMax[_constants.kSlaveConstants.length];
 
     _relEncoder = _master.getEncoder();
-    _absEncoder = _master.getAbsoluteEncoder();
+    // _absEncoder = _master.getAbsoluteEncoder(Spark);
 
     _profile = new TrapezoidProfile(new Constraints(_constants.kCruiseVelocity, _constants.kAcceleration));
     _controller = _master.getPIDController();
-
+    _relEncoder.setPositionConversionFactor(constants.kGearRatio);
+    _relEncoder.setVelocityConversionFactor(constants.kGearRatio/60);
     _master.burnFlash();
 
     for (int i = 0; i < _slaves.length; ++i) {
@@ -58,7 +58,7 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
   @Override
   public synchronized void writePeriodicOutputs() {
     if (_controlState == ControlState.MOTION_MAGIC) {
-      _profile.calculate(trapozoidTimer.get(), new State(getPosition(), 0), new State(demand, 0));
+      _controller.setReference(_profile.calculate(trapozoidTimer.get(), new State(getPosition(), 0), new State(demand, 0)).position, ControlType.kPosition);
     } else if (_controlState == ControlState.POSITION_PID || _controlState == ControlState.MOTION_PROFILING) {
       _controller.setReference(demand, ControlType.kPosition);
     } else {
@@ -68,19 +68,20 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
   }
 
   @Override
-  public void setForwardSoftLimit(float sofLimit) {
-    _master.setSoftLimit(SoftLimitDirection.kForward, sofLimit);
+  public void setForwardSoftLimit(double sofLimit) {
+    _master.setSoftLimit(SoftLimitDirection.kForward, (float)sofLimit);
     _master.enableSoftLimit(SoftLimitDirection.kForward, true);
   }
 
   @Override
-  public void setReverseSoftLimit(float sofLimit) {
-    _master.setSoftLimit(SoftLimitDirection.kReverse, sofLimit);
+  public void setReverseSoftLimit(double sofLimit) {
+    _master.setSoftLimit(SoftLimitDirection.kReverse, (float)sofLimit);
     _master.enableSoftLimit(SoftLimitDirection.kReverse, true);
   }
 
+  @Override
   public boolean atHomingLocation() {
-    return false;
+    return getPosition() - demand == 0;
   }
 
   public synchronized String getControlState() {
@@ -164,10 +165,20 @@ public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
 
   @Override
   public void setPosition(double pos) {
+    _relEncoder.setPosition(pos);
+  }
+  @Override
+  public void setHomingPosition(double pos) {
     if (_controlState != ControlState.POSITION_PID) {
       _controlState = ControlState.POSITION_PID;
     }
     demand = pos;
   }
 
+  public static GenericSparkMaxSubsystem createSparkMaxMotorGroup(final NinjaMotorSubsystemConstants constants){
+    return new GenericSparkMaxSubsystem(constants);
+  }
+
+  
+  
 }
