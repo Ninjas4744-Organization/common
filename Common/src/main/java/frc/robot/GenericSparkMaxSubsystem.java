@@ -17,7 +17,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.wpilibj.Timer;
 
-public abstract class GenericNeoSubsystem extends NinjaMotorController {
+public abstract class GenericSparkMaxSubsystem extends NinjaMotorController {
 
   protected final CANSparkMax _master;
   protected final CANSparkMax[] _slaves;
@@ -30,7 +30,7 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
   private final Timer trapozoidTimer = new Timer();
 
   /** Creates a new GenericMotorSubsystem. */
-  protected GenericNeoSubsystem(final NinjaMotorSubsystemConstants constants) {
+  protected GenericSparkMaxSubsystem(final NinjaMotorSubsystemConstants constants) {
     super(constants);
 
     _constants = constants;
@@ -102,7 +102,7 @@ public abstract class GenericNeoSubsystem extends NinjaMotorController {
     }
     demand = percentage;
   }
-
+  @Override
   public void set(State pos) {
     if (_controlState != ControlState.MOTION_MAGIC) {
       _controlState = ControlState.MOTION_MAGIC;

@@ -6,16 +6,18 @@ package frc.robot;
 
 import com.revrobotics.CANSparkBase.IdleMode;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public abstract class NinjaMotorController extends SubsystemBase  {
+public abstract class NinjaMotorController extends SubsystemBase {
   protected ControlState _controlState;
   protected GenericEntry position, velocity, setpoint, posError, velError, currentControl;
   protected NinjaMotorSubsystemConstants _constants;
   protected double demand;
-  
 
   protected NinjaMotorController(NinjaMotorSubsystemConstants constants) {
     _constants = constants;
@@ -51,10 +53,10 @@ public abstract class NinjaMotorController extends SubsystemBase  {
         .withSize(3, 3)
         .getEntry();
 
-      setPIDconstants(_constants.kPositionKp, _constants.kPositionKi, _constants.kPositionKd, _constants.kPositionKIzone);
-      setForwardSoftLimit(_constants.kMaxUnitsLimit);
-      
-      setReverseSoftLimit(_constants.kMinUnitsLimit);
+    setPIDconstants(_constants.kPositionKp, _constants.kPositionKi, _constants.kPositionKd, _constants.kPositionKIzone);
+    setForwardSoftLimit(_constants.kMaxUnitsLimit);
+
+    setReverseSoftLimit(_constants.kMinUnitsLimit);
   }
 
   /** Creates a new NinjasSubsytem. */
@@ -73,33 +75,54 @@ public abstract class NinjaMotorController extends SubsystemBase  {
 
   public void zeroSensors() {
   }
+
   public abstract void setForwardSoftLimit(float sofLimit);
+
   public abstract void setReverseSoftLimit(float sofLimit);
 
   public abstract void setPIDconstants(double Kp, double Ki, double Kd, double KIzone);
+
   public abstract double getP();
+
   public abstract double getI();
+
   public abstract double getD();
+
   public abstract double getIzone();
+
   public abstract double getPosition();
 
   public abstract void set(double percentage);
+
+  public abstract void set(State pos);
+
   public abstract double get();
+
   protected abstract void stop();
-  
+
   public abstract void setPosition(double pos);
 
   public abstract double getVelError();
 
   public abstract double getSetpoint();
 
+  public Command runProfile(State pos) {
+    return Commands.runOnce(() -> set(pos), this);
+  }
+
+  public Command runMotors(double percentage) {
+    return Commands.startEnd(
+        () -> set(percentage),
+        () -> stop(),
+        this);
+  }
 
   public void outputTelemetry(boolean testing) {
-    if(testing){
-    position.setDouble(getPosition());
-    currentControl.setString(_controlState.toString());
-    setpoint.setDouble(getSetpoint());
-    velError.setDouble(getVelError());
+    if (testing) {
+      position.setDouble(getPosition());
+      currentControl.setString(_controlState.toString());
+      setpoint.setDouble(getSetpoint());
+      velError.setDouble(getVelError());
     }
   }
 
@@ -108,7 +131,6 @@ public abstract class NinjaMotorController extends SubsystemBase  {
     writePeriodicOutputs();
     outputTelemetry(false);
   }
-
 
   protected enum ControlState {
     OPEN_LOOP, MOTION_MAGIC, POSITION_PID, MOTION_PROFILING
