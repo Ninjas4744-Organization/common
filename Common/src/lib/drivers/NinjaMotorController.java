@@ -67,6 +67,7 @@ public abstract class NinjaMotorController {
 
   // Optional design pattern for caching periodic writes to avoid hammering the
   // HAL/CAN.
+  
   public void writePeriodicOutputs() {
   }
 
@@ -79,6 +80,11 @@ public abstract class NinjaMotorController {
 
   public abstract void setPIDconstants(double Kp, double Ki, double Kd, double KIzone);
 
+  /**
+   * Returns current D constant of this motor group
+   * 
+   * @return D constant of this motor group
+   */
   public abstract double getP();
 
   public abstract double getI();

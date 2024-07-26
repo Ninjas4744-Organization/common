@@ -32,11 +32,7 @@ public class LinearSubSystem extends NinjaSubsytem {
 
     }
 
-    public Command Reset() {
-        return runMotors(-0.5).until(() -> {
-            return isLimitSwitch();
-        });
-    }
+    
 
     
 
